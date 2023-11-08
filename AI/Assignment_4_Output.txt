@@ -1,0 +1,278 @@
+Assignment 4
+Kartik Kamthe TA26
+
+mysql> create database assign4;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use assign4;
+Database changed
+mysql> create table borrower (roll_no int, name varchar(50), date_of_issue date, name_of_book varchar(50), status varchar(10));
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> insert into borrower value (1, "Kartik", "2023-7-12", "The Alchemist", "I"),
+    ->  (2, "Harsh", "2023-7-16", "Atomic Habits", "I"),
+    ->     (3, "Mandar", "2023-6-12", "Bagvat Gita", "I"),
+    ->     (4, "Purvesh", "2023-8-17", "CAN’T HURT ME", "I"),
+    ->     (5, "Neel", "2023-7-18", "DBMS", "I"),
+    ->     (6, "Nikhil", "2023-6-21", "AI", "I"),
+    ->     (7, "Aryan", "2023-8-22", "WT", "I"),
+    ->     (8, "Manthan", "2023-8-25", "CN", "I"),
+    ->     (9, "Shweta", "2023-8-12", "PR", "I"),
+    ->     (10, "Suchit", "2023-6-19", "Persuasion", "I");
+Query OK, 10 rows affected (0.01 sec)
+Records: 10  Duplicates: 0  Warnings: 0
+
+mysql> select * from borrower;
++---------+----------+---------------+--------------+--------+
+| roll_no | name     | date_of_issue | name_of_book | status |
++---------+----------+---------------+--------------+--------+
+|       1 | Kartik   | 2023-07-12    | The Alchemist| I      |
+|       2 | Harsh    | 2023-07-16    | Atomic Habits| I      |
+|       3 | Mandar   | 2023-06-12    | Bagvat Gita  | I      |
+|       4 | Purvesh  | 2023-08-17    | CAN’T HURT ME| I      |
+|       5 | Neel     | 2023-07-18    | DBMS         | I      |
+|       6 | Nikhil   | 2023-06-21    | AI           | I      |
+|       7 | Aryan    | 2023-08-22    | WT           | I      |
+|       8 | Manthan  | 2023-08-25    | CN           | I      |
+|       9 | Shweta   | 2023-08-12    | PR           | I      |
+|      10 | Suchit   | 2023-06-19    | Persuasion   | I      |
++---------+----------+---------------+--------------+--------+
+10 rows in set (0.00 sec)
+
+mysql>
+mysql> create table fine (roll_no int, Idate date, amt varchar(30));
+Query OK, 0 rows affected (0.02 sec)
+
+mysql>
+mysql> DELIMITER $
+mysql>
+mysql> CREATE PROCEDURE CalculateFine(IN p_roll_no INT, IN p_name_of_book VARCHAR(100))
+    -> BEGIN
+    ->     DECLARE v_date_of_issue DATE;
+    ->     DECLARE v_days_late INT;
+    ->     DECLARE v_fine_amt INT;
+    ->
+    ->     -- Fetch date_of_issue and status of the book for the given roll_no and name_of_book
+    ->     SELECT date_of_issue INTO v_date_of_issue FROM Borrower
+    ->     WHERE roll_no = p_roll_no AND name_of_book = p_name_of_book;
+    ->
+    ->     -- Calculate the number of days late
+    ->     SET v_days_late = DATEDIFF(CURRENT_DATE, v_date_of_issue);
+    ->
+    ->     IF v_days_late > 30 THEN
+    ->         SET v_fine_amt = v_days_late * 50;
+    ->     ELSE
+    ->         SET v_fine_amt = v_days_late * 5;
+    ->     END IF;
+    ->
+    ->     -- Update the status of the book
+    ->     UPDATE Borrower
+    ->     SET status = 'R'
+    ->     WHERE roll_no = p_roll_no AND name_of_book = p_name_of_book;
+    ->
+    ->     -- Insert fine details into the Fine table if applicable
+    ->     IF v_days_late >= 15 THEN
+    ->         INSERT INTO Fine (roll_no, Idate, amt)
+    ->         VALUES (p_roll_no, CURRENT_DATE, v_fine_amt);
+    ->     END IF;
+    ->
+    ->     -- Display results
+    ->     SELECT CONCAT('Fine Amount: Rs ', v_fine_amt) AS message;
+    ->     SELECT 'Book status changed to R' AS message;
+    ->
+    -> END;
+    -> $
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> DELIMITER ;
+mysql>
+mysql> CALL CalculateFine(1, 'The Alchemist');
++----------------------+
+| message              |
++----------------------+
+| Fine Amount: Rs 2200 |
++----------------------+
+1 row in set (0.01 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(2, 'Atomic Habits');
++----------------------+
+| message              |
++----------------------+
+| Fine Amount: Rs 2000 |
++----------------------+
+1 row in set (0.01 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(3, 'Bagvat Gita');
++----------------------+
+| message              |
++----------------------+
+| Fine Amount: Rs 3700 |
++----------------------+
+1 row in set (0.01 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(4, 'CAN’T HURT ME');
++--------------------+
+| message            |
++--------------------+
+| Fine Amount: Rs 40 |
++--------------------+
+1 row in set (0.00 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(5, 'DBMS');
++----------------------+
+| message              |
++----------------------+
+| Fine Amount: Rs 1900 |
++----------------------+
+1 row in set (0.01 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(6, 'AI');
++----------------------+
+| message              |
++----------------------+
+| Fine Amount: Rs 3250 |
++----------------------+
+1 row in set (0.01 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(7, 'WT');
++--------------------+
+| message            |
++--------------------+
+| Fine Amount: Rs 15 |
++--------------------+
+1 row in set (0.01 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(8, 'CN');
++-------------------+
+| message           |
++-------------------+
+| Fine Amount: Rs 0 |
++-------------------+
+1 row in set (0.00 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(9, 'PR');
++--------------------+
+| message            |
++--------------------+
+| Fine Amount: Rs 65 |
++--------------------+
+1 row in set (0.00 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> CALL CalculateFine(10, 'Persuasion');
++----------------------+
+| message              |
++----------------------+
+| Fine Amount: Rs 3350 |
++----------------------+
+1 row in set (0.01 sec)
+
++--------------------------+
+| message                  |
++--------------------------+
+| Book status changed to R |
++--------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+mysql>
+mysql> select * from borrower;
++---------+----------+---------------+--------------+--------+
+| roll_no | name     | date_of_issue | name_of_book | status |
++---------+----------+---------------+--------------+--------+
+|       1 | Kartik   | 2023-07-12    | The Alchemist| R      |
+|       2 | Harsh    | 2023-07-16    | Atomic Habits| R      |
+|       3 | Mandar   | 2023-06-12    | Bagvat Gita  | R      |
+|       4 | Purvesh  | 2023-08-17    | CAN’T HURT ME| R      |
+|       5 | Neel     | 2023-07-18    | DBMS         | R      |
+|       6 | Nikhil   | 2023-06-21    | AI           | R      |
+|       7 | Aryan    | 2023-08-22    | WT           | R      |
+|       8 | Manthan  | 2023-08-25    | CN           | R      |
+|       9 | Shweta   | 2023-08-12    | PR           | R      |
+|      10 | Suchit   | 2023-06-19    | Persuasion   | R      |
++---------+----------+---------------+--------------+--------+
+10 rows in set (0.00 sec)
+
+mysql>
